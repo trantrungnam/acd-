@@ -76,13 +76,43 @@ namespace Spice.Areas.Customer.Controllers
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> ConfirmUser()
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
-            var OrderHeader = await _db.OrderHeader.Include(o => o.ApplicationUser).FirstOrDefaultAsync(o =>  o.UserId == claim.Value);
+            var OrderHeader = await _db.OrderHeader.Include(o => o.ApplicationUser).FirstOrDefaultAsync(o => o.UserId == claim.Value);
             return Ok(OrderHeader);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> GetOrderResult()
+        {
+            var claimsIdentity = (ClaimsIdentity)this.User.Identity;
+            var claims = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claims != null)
+            {
+                OrderListViewModel orderListViewModel = new OrderListViewModel
+                {
+                    Orders = new List<OrderDetailsViewModel>()
+                };
+                List<OrderHeader> orderHeaders = await _db.OrderHeader.Include(m => m.ApplicationUser)
+                    .Where(p => p.UserId == claims.Value)
+                    .ToListAsync();
+                foreach (OrderHeader orderHeader in orderHeaders)
+                {
+                    OrderDetailsViewModel orderDetailsViewModel = new OrderDetailsViewModel
+                    {
+                        OrderHeader = orderHeader,
+                        OrderDetails = await _db.OrderDetails.Include(m => m.MenuItem).Where(p => p.OrderId == orderHeader.Id).ToListAsync()
+                    };
+                    orderListViewModel.Orders.Add(orderDetailsViewModel);
+                }
+                return Ok(orderListViewModel);
+            }
+            return Unauthorized("Please login again");
         }
 
 
