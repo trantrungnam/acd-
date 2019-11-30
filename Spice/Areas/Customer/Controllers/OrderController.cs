@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using Spice.Data;
 using Spice.Models;
 using Spice.Models.ViewModels;
@@ -68,11 +69,15 @@ namespace Spice.Areas.Customer.Controllers
             if (result.Succeeded)
             {
                 var appUser = await _db.Users.SingleOrDefaultAsync(x => x.Email == input.email);
-                return Ok(await GenerateJwtToken(input.email, appUser));
+                LoginOutput loginOutput = new LoginOutput
+                {
+                    token = (string)await GenerateJwtToken(input.email, appUser),
+                    message = "Success"
+                };
+                var resultString = JsonConvert.SerializeObject(loginOutput);
+                return Ok(resultString);
             }
-
             return Unauthorized();
-
         }
 
         [HttpPost]

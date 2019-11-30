@@ -5,11 +5,17 @@ using System.Threading.Tasks;
 
 namespace Spice.Models.ViewModels
 {
-    public class LoginInput 
+    public class LoginInput
     {
         public string email { get; set; }
         public string password { get; set; }
         public bool rememberme { get; set; }
+    }
+
+    public class LoginOutput
+    {
+        public string token { get; set; }
+        public string message { get; set; }
     }
 
 }
